@@ -9,6 +9,10 @@
 #include <stdbool.h>
 #include "seven_segment_driver.h"
 
+
+
+/* |||||||||||||||||||||  DECLARATIONS  ||||||||||||||||||||||||| */
+
 typedef struct {
 	GPIO_TypeDef* port;
 	uint16_t pin;
@@ -17,11 +21,13 @@ typedef struct {
 extern SPI_HandleTypeDef hspi2;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
-extern SEVSEG_DISPLAY_TypeDef sevseg;
+
+SEVSEG_DISPLAY_TypeDef sevseg;
 
 volatile static bool UI_CURSOR_PRESSED = false;
 volatile static bool UI_COUNTUP_PRESSED = false;
 volatile static bool UI_COUNTDOWN_PRESSED = false;
+volatile static bool TIM2_UP = false;
 volatile static bool debounce = true;
 
 volatile enum ENUM_SEVSEG_DIGIT cursor_selection = ENUM_SEVSEG_DIGIT_0; //maybe add a UI handler
@@ -32,28 +38,37 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef*);
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef*);
 
 
+/* |||||||||||||||||||||  MAIN  ||||||||||||||||||||||||| */
+
 int app_main(){
 
 SEVSEG_Init();
 
 	uint8_t myDataa[5] = {ENUM_SEVSEG_CHAR_H,
-					  ENUM_SEVSEG_CHAR_E,
-					  ENUM_SEVSEG_CHAR_L,
-					  ENUM_SEVSEG_CHAR_L,
-					  ENUM_SEVSEG_CHAR_o};
+					  	  ENUM_SEVSEG_CHAR_E,
+						  ENUM_SEVSEG_CHAR_L,
+						  ENUM_SEVSEG_CHAR_L,
+						  ENUM_SEVSEG_CHAR_o};
 
 	SEVSEG_StoreDataBuf(&sevseg, myDataa);
 
 	volatile enum ENUM_SEVSEG_CHAR test1;
 
-	/* |||||||||||||||||||||  LOOP  ||||||||||||||||||||||||| */
+/* |||||||||||||||||||||  LOOP  ||||||||||||||||||||||||| */
 
 	while(1) {
 
-		/* Task 1: Process Inputs
+		/* Task 1: Polling and Processing */
+
+		if (TIM2_UP) {
+			debounce = true;
+		}
 
 		if (debounce) {
 			debounce = false;
+			TIM2->CR1 = TIM_CR1_CEN;
+
+
 			if (UI_CURSOR_PRESSED) {
 				UI_CURSOR_PRESSED = false;
 
@@ -62,14 +77,13 @@ SEVSEG_Init();
 				UI_COUNTUP_PRESSED = false;
 
 
-
 			} else if (UI_COUNTDOWN_PRESSED){
 				UI_COUNTUP_PRESSED = false;
 
 
 			}
 
-		} /* debounce */
+		}  // debounce
 
 		/* Task 2: Render Display */
 
@@ -96,6 +110,7 @@ SEVSEG_Init();
 
 } //end app_main
 
+/* |||||||||||||||||||||  DEFINITIONS  ||||||||||||||||||||||||| */
 
 static void SEVSEG_Init(){
 
@@ -144,6 +159,10 @@ static void SEVSEG_Init(){
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
+	 if (htim->Instance == TIM2){
+		 TIM2_UP = true; // personal copy of update flag, HAL has already cleared the register bit
+		 TIM2->CR1 = ~(TIM_CR1_CEN);
+	}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin){
