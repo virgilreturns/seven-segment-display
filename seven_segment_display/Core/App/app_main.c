@@ -29,6 +29,7 @@ volatile static bool UI_COUNTUP_PRESSED = false;
 volatile static bool UI_COUNTDOWN_PRESSED = false;
 volatile static bool TIM2_UP = false;
 volatile static bool debounce = true;
+volatile static uint8_t temp;
 
 volatile enum ENUM_SEVSEG_DIGIT cursor_selection = ENUM_SEVSEG_DIGIT_0; //maybe add a UI handler
 GPIO_PIN_TypeDef DIGIT_SEL_PINS_ARRAY[];
@@ -58,34 +59,37 @@ SEVSEG_Init();
 
 	while(1) {
 
-		/* Task 1: Polling and Processing */
+		/* Task 1: Polling */
 
 		if (TIM2_UP) {
 			debounce = true;
 		}
 
+		/* Task 2: Processing  */
+
 		if (debounce) {
 			debounce = false;
-			TIM2->CR1 = TIM_CR1_CEN;
-
+			TIM2->CR1 |= TIM_CR1_CEN;
 
 			if (UI_CURSOR_PRESSED) {
 				UI_CURSOR_PRESSED = false;
-
+				cursor_selection++;
 
 			} else if (UI_COUNTUP_PRESSED){
 				UI_COUNTUP_PRESSED = false;
-
+				temp = sevseg.digit_select[cursor_selection].current_char_index;
+					if (temp == ENUM_SEVSEG_CHAR_Blank) temp = ENUM_SEVSEG_CHAR_0;
+					else temp++;
+				sevseg.digit_select[cursor_selection].current_char_index = temp;
 
 			} else if (UI_COUNTDOWN_PRESSED){
 				UI_COUNTUP_PRESSED = false;
-
-
+				sevseg.digit_select[cursor_selection].current_char_index--;
 			}
 
 		}  // debounce
 
-		/* Task 2: Render Display */
+		/* Task 3: Render Display */
 
 		test1 = SEVSEG_ReadDigitData(&sevseg, sevseg.refresh_target);
 		HAL_SPI_Transmit(&hspi2, &SEVSEG_CHAR_ARRAY[sevseg.digit_select[sevseg.refresh_target].current_char_index] , 1, 100);

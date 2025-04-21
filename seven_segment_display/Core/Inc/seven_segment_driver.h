@@ -62,8 +62,8 @@ typedef struct {
 
 typedef struct {
 	SPI_HandleTypeDef* spi_handler;
-	SEVSEG_DIGIT_TypeDef digit_select[SEVSEG_QTY_DIGITS];
-	enum ENUM_SEVSEG_DIGIT refresh_target;
+	SEVSEG_DIGIT_TypeDef digit_select[SEVSEG_QTY_DIGITS]; // for cursor
+	enum ENUM_SEVSEG_DIGIT refresh_target; // for rendering
 } SEVSEG_DISPLAY_TypeDef;
 
 extern enum ENUM_SEVSEG_CHAR SEVSEG_CHAR_ARRAY[];
