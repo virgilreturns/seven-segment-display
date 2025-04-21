@@ -28,8 +28,8 @@ volatile static bool UI_CURSOR_PRESSED = false;
 volatile static bool UI_COUNTUP_PRESSED = false;
 volatile static bool UI_COUNTDOWN_PRESSED = false;
 volatile static bool TIM2_UP = false;
-volatile static bool debounce = true;
 volatile static uint8_t temp;
+static const uint16_t UI_ALL_BITS = 0x111;
 
 volatile enum ENUM_SEVSEG_DIGIT cursor_selection = ENUM_SEVSEG_DIGIT_0; //maybe add a UI handler
 GPIO_PIN_TypeDef DIGIT_SEL_PINS_ARRAY[];
@@ -59,37 +59,36 @@ SEVSEG_Init();
 
 	while(1) {
 
-		/* Task 1: Polling */
+		/* Task 1: Polling and Processing */
 
 		if (TIM2_UP) {
-			debounce = true;
+			TIM2_UP = false; // acknowledge
+			EXTI->EMR |= UI_ALL_BITS; // re-enable interrupts
 		}
 
-		/* Task 2: Processing  */
+		if (UI_CURSOR_PRESSED) {
+			UI_CURSOR_PRESSED = false;
+			if (cursor_selection == ( SEVSEG_QTY_DIGITS - 1))
+				cursor_selection = 0; else cursor_selection++;
 
-		if (debounce) {
-			debounce = false;
-			TIM2->CR1 |= TIM_CR1_CEN;
+		} else if (UI_COUNTUP_PRESSED){
+			UI_COUNTUP_PRESSED = false;
+			temp = sevseg.digit_select[cursor_selection].current_char_index;
+			if (temp == ENUM_SEVSEG_CHAR_Blank) temp = ENUM_SEVSEG_CHAR_0;
+			else temp++;
+			sevseg.digit_select[cursor_selection].current_char_index = temp;
 
-			if (UI_CURSOR_PRESSED) {
-				UI_CURSOR_PRESSED = false;
-				cursor_selection++;
+		} else if (UI_COUNTDOWN_PRESSED){
+			UI_COUNTUP_PRESSED = false;
+			temp = sevseg.digit_select[cursor_selection].current_char_index;
+			if (temp == ENUM_SEVSEG_CHAR_0) temp = ENUM_SEVSEG_CHAR_Blank;
+			else temp--;
+			sevseg.digit_select[cursor_selection].current_char_index = temp;
 
-			} else if (UI_COUNTUP_PRESSED){
-				UI_COUNTUP_PRESSED = false;
-				temp = sevseg.digit_select[cursor_selection].current_char_index;
-					if (temp == ENUM_SEVSEG_CHAR_Blank) temp = ENUM_SEVSEG_CHAR_0;
-					else temp++;
-				sevseg.digit_select[cursor_selection].current_char_index = temp;
+		}
 
-			} else if (UI_COUNTDOWN_PRESSED){
-				UI_COUNTUP_PRESSED = false;
-				sevseg.digit_select[cursor_selection].current_char_index--;
-			}
 
-		}  // debounce
-
-		/* Task 3: Render Display */
+		/* Task 2: Render Display */
 
 		test1 = SEVSEG_ReadDigitData(&sevseg, sevseg.refresh_target);
 		HAL_SPI_Transmit(&hspi2, &SEVSEG_CHAR_ARRAY[sevseg.digit_select[sevseg.refresh_target].current_char_index] , 1, 100);
@@ -164,13 +163,22 @@ static void SEVSEG_Init(){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
 	 if (htim->Instance == TIM2){
-		 TIM2_UP = true; // personal copy of update flag, HAL has already cleared the register bit
-		 TIM2->CR1 = ~(TIM_CR1_CEN);
+		 TIM2_UP = true; // invoke
+		 TIM2->CR1 =~(TIM_CR1_CEN); // disable timer
 	}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin){
-	return;
+	if (pin == 0) {
+		UI_CURSOR_PRESSED = true; //invoke
+		EXTI->EMR =~ UI_ALL_BITS; // disable exti lines 0:2
+	} else if (pin == 1) {
+		UI_COUNTDOWN_PRESSED = true;
+		EXTI->EMR =~ UI_ALL_BITS;
+	} else if (pin == 2 ) {
+		UI_COUNTUP_PRESSED = true;
+		EXTI->EMR =~ UI_ALL_BITS;
+	}
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef* hspi){
