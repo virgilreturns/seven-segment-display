@@ -1,0 +1,119 @@
+ TESTING REQ:
+    -INTEGRATED TESTS: 
+				     : (COMPLETED 3/20/2025) SHIFT REGISTER + 7 LEDS + BUTTON INTERFACE
+					 : (COMPLETED 3/21/2025) SHIFT REGISTER + 7 SEGMENT DISPLAY, (basic test) make sure digital 0 actually is ground
+					 : (COMPLETED 3/21/2025) SHIFT REGISTER + 5 DIGIT 7 SEGMENT DISPLAY 
+					 : (COMPLETED 3/24/2025) SPI COMMUNICATION + LOGIC ANALYZER 
+					 : (COMPLETED 3/25/2025) SPI COMMUNICATION WITH SHIFT REGISTER + 7 SEGMENT DISPLAY (1 digit, 1 character)
+					 : (COMPLETED 3/26/2025) CODE ARCHITECTURE FOR MULTIPLEXING DIGITS, ACCURATE DELAYS BETWEEN TRANSMISSION
+					 : (INCOMPLETE) SPI COMMUNICATION WITH SHIFT REGISTER + 5 DIGIT 7 SEGMENT DISPLAY (use full data buf, see)
+					   CHECK GPIO CONTROL PINS, DIGITAL SELECT, LATCH, TIMERS 1,2 requires debugging
+					 : (COMPLETED 3/25/2025) CODE ARCHITECTURE FOR BUTTON USER INTERFACE, DEBOUNCE? EXTI CALLBACKS?
+					 : (INCOMPLETE) CODE REVISION FOR BUTTON UI IN CONFORMANCE TO NEW STATE MACHINE DESIGN (config & normal)
+
+3/17/2025
+  The 74HC595 shift register will be driving up to 7 LEDs. It has a max total output of 70 mA and 35 mA for a single pin.
+  With 7 LEDs, the maximum individual output pin current is 6.25 mA which can be achieved with 560 ohm resistor in series with
+  the diode.
+
+  TESTING REQ: See how much current provides a satisfactory brightness. Consider a transistor based circuit to drive more
+  power for the LEDs, 
+
+  Continue to test shift register with 3mm LEDs for now. Need to fix circuit and use 10k+ pull-up/pulldown resistors for
+  SRCLOCK, RCLOCK, and SER. SRCLEAR tied to Vcc and OE tied to GND.  
+
+  TEST REVIEW:  Extreme debounce on all pushbuttons and dip switches :(((
+                Overall, shift register seems to work fine.
+  
+  UPCOMING TASKS:
+  - Circuit design for microcontroller to shift register, start firmware for transmitting bits, 
+  - Test shift register with 7 segment display, continue using 680 ohm resistors
+  - (OPTIONAL) create separate 7 segment display on proto board with resistors and header pins
+  - Test SPI communication with shift register and 3mm LEDs
+  - Implement SPI communication with shift register and 7 segment display
+
+3/20/2025
+  - Successfully tested shift register with 7 segment display. It works as expected.
+  - Need to implement SPI communication with the shift register and the 7 segment display.
+ 
+  - further ideas for UI implementation:
+
+ /* ------------------one button config----------------------
+	One button is used to cycle through all of the seven_segment characters
+	Straight forward and pin resourceful.
+*/
+
+ /* ------------------two button config / rotary encoder ----------------------
+	Two buttons are used to cycle through all of the seven_segment characters
+	Button 1: cycles forward
+	Button 2: cycles backwards
+	More intuitive than one button, but uses more pins.
+*/
+ /* ------------------switch encoding config----------------------
+	4 dip switches are used to select a specific character to display on the seven_segment.
+	Faster to select a specific character, but requires more pins, and a documentation of the encoding.
+	Up to number 9 will be in binary, and the other characters can be attained via documentation.
+*/
+
+  Keep 8 diode testing setup for testing with SPI functions
+  Finished basic seven segment byte transmission code.
+
+  Interested in implementing code for the UI configs
+
+
+3/21/2025
+
+ Started soldering circuit unto protoboard, probably a bad idea because
+ I just had another fantastic idea for an implementation of the project.
+
+ 2 button config, one button to cycle through characters, and the other to cycle through the digits.
+ This creates a sort of text editor for the seven segment display.
+
+ Other caveats, will need multiplexing with multiple digits, (selecting which VCC to turn on)
+ While I only really want no more than 4 digits, I can use a timer to "play" the digits, and shift
+ the data through the display. I.E. with 4 digits, I can display a 20 character string by shifting the characters through an array,
+ then displaying the array on the 4 digits.
+
+ I can have a timer between configuration and "play" mode, hence if there is no configuration for a certain amount of time, the display will
+ start playing the string.
+
+ The first button press of either configuration button will start the configuration mode, and then they will
+ function as normal. The display will default to play mode after a certain amount of time of inactivity.
+
+ Other features: A dip switch -> change how many digits are shifted at a time, FULL DISPLAY or BYTE-WISE shifting.
+				 -> how big the string can be
+
+ TESTING: Using Analog Discovery 3 (AD3) to read button bounce signal, familizarize with oscilloscope
+
+ Completed:
+	-refactored code to support multiple digit display
+	-default data will be "Hello"
+ 
+ 3/24/2025
+
+	Completed testing SPI communication with logic analyzer. Tested data buffers: (0xFF, 0x33, 0x88, {ASCII_TO_ENUM("HELLo") })
+	
+	KEY TAKEAWAYS: increase prescaler to decrease the SPI frequency to ~1 Mhz. APB1 peripheral I believe for SPI2. Sysclk / 16 ~ 1Mhz.
+	Sample frequency should be at least 4 times greater than the transmission frequency.
+
+	There is a bug where the logic analyzer can accurate detect the first buffer, but will fall out of alignment. Doesn't start reading
+	immediately when the CLK goes high...
+
+	Examining HC595 datasheet, provides timing requirements for pulse width, max CLK speeds...
+
+	TODO: CREATE PULSE FUNCTION, ADJUST CLOCK FREQ, TRANSMISSION SEQUENCE
+	      TIMING REQUIREMENTS: max CLK speed at 2.0 V = 5 Mhz, 4.5 V = 25 Mhz. Pulse Duration SRCLR 100 ns at 2V,
+	      SWITCHING CHARACTERISTICS (input to output): ~250 ns
+
+ 3/25/2025
+	
+	Completed testing SPI communication with shift register + one digit display. 
+	Tested data: (ENUM_0, - ENUM_3, ENUM_H, ENUM_n, ENUM_o)
+
+	KEY TAKEAWAYS: ENUM_SEVSEG_CHAR list is not accurately defined, at least for some of the letters.
+				 : SPI Could be faster, but I won't be able to read the logic on the analyzer...
+				 : Might increase SPI CLk from 1 Mhz to 5 Mhz (max)
+	
+	TODO: TEST/DEBUG ENTIRE REFRESH CYCLE/INTERRUPT CHAIN, watch LATCH_pin, DS_pin, TIMERs, SPI_pins, using Live Expressions
+
+
