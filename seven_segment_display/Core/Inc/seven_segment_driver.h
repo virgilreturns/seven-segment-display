@@ -1,9 +1,10 @@
 #ifndef __SEVEN_SEGMENT_DRIVER_H
 #define __SEVEN_SEGMENT_DRIVER_H
 
-#include "main.h"
 
 #define SEVSEG_QTY_DIGITS 8
+
+#include "stm32f4xx_hal.h"
 
 
 typedef enum __DEBOUNCE_STATE {
