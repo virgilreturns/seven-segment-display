@@ -6,7 +6,7 @@
 					 : (COMPLETED 3/24/2025) SPI COMMUNICATION + LOGIC ANALYZER 
 					 : (COMPLETED 3/25/2025) SPI COMMUNICATION WITH SHIFT REGISTER + 7 SEGMENT DISPLAY (1 digit, 1 character)
 					 : (COMPLETED 3/26/2025) CODE ARCHITECTURE FOR MULTIPLEXING DIGITS, ACCURATE DELAYS BETWEEN TRANSMISSION
-					 : (INCOMPLETE) SPI COMMUNICATION WITH SHIFT REGISTER + 5 DIGIT 7 SEGMENT DISPLAY (use full data buf, see)
+					 : (COMPLETED 4/24/2025) SPI COMMUNICATION WITH SHIFT REGISTER + 5 DIGIT 7 SEGMENT DISPLAY (use full data buf, see)
 					   CHECK GPIO CONTROL PINS, DIGITAL SELECT, LATCH, TIMERS 1,2 requires debugging
 					 : (COMPLETED 3/25/2025) CODE ARCHITECTURE FOR BUTTON USER INTERFACE, DEBOUNCE? EXTI CALLBACKS?
 					 : (INCOMPLETE) CODE REVISION FOR BUTTON UI IN CONFORMANCE TO NEW STATE MACHINE DESIGN (config & normal)
@@ -114,6 +114,16 @@
 				 : SPI Could be faster, but I won't be able to read the logic on the analyzer...
 				 : Might increase SPI CLk from 1 Mhz to 5 Mhz (max)
 	
-	TODO: TEST/DEBUG ENTIRE REFRESH CYCLE/INTERRUPT CHAIN, watch LATCH_pin, DS_pin, TIMERs, SPI_pins, using Live Expressions
+			 TODO: TEST/DEBUG ENTIRE REFRESH CYCLE/INTERRUPT CHAIN
+4/25/2025
 
+	Completed testing full implementation unit test.
+	Tested data: {8, r, U, H}, {t, r, o , y}, {H, o, L, y}
+	
+	KEY TAKEAWAYS:	Increased SPI transmission speed to max frequency (42 Mhz)
+				 :	Superloop/Polling design pattern works beautifully
+				 
+			 TODO:	FINISH SOLDERING PROTO-BOARDS, RESEARCH ENCLOSURE IDEAS
+			 	 :	BRAINSTORM FULL HARDWARE IMPLEMENTATION DESIGN
+	
 

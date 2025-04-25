@@ -68,10 +68,6 @@ SEVSEG_Init();
 
 		/* Task 1: Polling and Processing */
 		/*
-		if (TIM2_UP) {
-			TIM2_UP = false; // acknowledge
-			EXTI->EMR |= UI_ALL_BITS; // re-enable interrupts
-		}
 
 		if (UI_CURSOR_PRESSED) {
 			UI_CURSOR_PRESSED = false;
@@ -93,6 +89,12 @@ SEVSEG_Init();
 			sevseg.digit_select[cursor_selection].current_char_index = temp;
 
 		}
+
+		if (TIM2_UP) {
+			TIM2_UP = false; // acknowledge
+			EXTI->EMR |= UI_ALL_BITS; // re-enable interrupts
+		}
+
 
 		*/
 		/* Task 2: Render Display */
