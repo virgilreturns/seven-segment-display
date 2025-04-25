@@ -46,17 +46,17 @@ int app_main(){
 
 SEVSEG_Init();
 
-/*	uint8_t myDataa[5] = {ENUM_SEVSEG_CHAR_H,
-					  	  ENUM_SEVSEG_CHAR_E,
-						  ENUM_SEVSEG_CHAR_L,
-						  ENUM_SEVSEG_CHAR_L,
-						  ENUM_SEVSEG_CHAR_o};
-*/
-	uint8_t myDataa[5] = {ENUM_SEVSEG_CHAR_8,
+	uint8_t myDataa[5] = {ENUM_SEVSEG_CHAR_t,
+					  	  ENUM_SEVSEG_CHAR_r,
+						  ENUM_SEVSEG_CHAR_o,
+						  ENUM_SEVSEG_CHAR_Y,};
+						  //ENUM_SEVSEG_CHAR_o};
+
+/*	uint8_t myDataa[5] = {ENUM_SEVSEG_CHAR_8,
 						  ENUM_SEVSEG_CHAR_r,
 						  ENUM_SEVSEG_CHAR_U,
 						  ENUM_SEVSEG_CHAR_h};
-
+*/
 
 	SEVSEG_StoreDataBuf(&sevseg, myDataa);
 
@@ -104,9 +104,11 @@ SEVSEG_Init();
 
 		HAL_GPIO_WritePin(DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].port,
 						  DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].pin, GPIO_PIN_SET);
-		HAL_Delay(100);
+		HAL_Delay(2);
+
 		HAL_GPIO_WritePin(DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].port,
 						  DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].pin, GPIO_PIN_RESET);
+
 
 
 		if (sevseg.refresh_target == SEVSEG_QTY_DIGITS - 1) {
@@ -159,10 +161,6 @@ static void SEVSEG_Init(){
 	sevseg.digit_select[3].DS_pin = DIGIT_SEL_3_Pin;
 	sevseg.digit_select[3].DS_port = DIGIT_SEL_3_GPIO_Port;
 	sevseg.digit_select[3].current_char_index = 0;
-
-	sevseg.digit_select[4].DS_pin = DIGIT_SEL_4_Pin;
-	sevseg.digit_select[4].DS_port = DIGIT_SEL_4_GPIO_Port;
-	sevseg.digit_select[4].current_char_index = 0;
 
 	sevseg.refresh_target = ENUM_SEVSEG_DIGIT_0;
 

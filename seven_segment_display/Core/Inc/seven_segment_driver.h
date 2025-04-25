@@ -2,7 +2,7 @@
 #define __SEVEN_SEGMENT_DRIVER_H
 
 
-#define SEVSEG_QTY_DIGITS 8
+#define SEVSEG_QTY_DIGITS 4
 
 #include "stm32f4xx_hal.h"
 
