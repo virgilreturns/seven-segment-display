@@ -22,6 +22,7 @@ typedef struct {
 extern SPI_HandleTypeDef hspi2;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 
 SEVSEG_DISPLAY_TypeDef sevseg;
 
@@ -29,10 +30,11 @@ volatile static bool UI_CURSOR_PRESSED = false;
 volatile static bool UI_COUNTUP_PRESSED = false;
 volatile static bool UI_COUNTDOWN_PRESSED = false;
 volatile static bool TIM2_UP = false;
+volatile static bool TIM3_UP = false;
 volatile static uint8_t temp;
 static const uint16_t UI_ALL_BITS = 0x111;
 
-volatile enum ENUM_SEVSEG_DIGIT cursor_selection = ENUM_SEVSEG_DIGIT_0; //maybe add a UI handler
+volatile enum ENUM_SEVSEG_DIGIT cursor_selection = ENUM_SEVSEG_DIGIT_0;
 GPIO_PIN_TypeDef DIGIT_SEL_PINS_ARRAY[8];
 
 static void SEVSEG_Init();
@@ -44,27 +46,46 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef*);
 
 int app_main(){
 
-SEVSEG_Init();
+	// this is used in sevseg_init
+	uint8_t myDataa[SEVSEG_DATA_BUF_SIZE] = {
+				ENUM_SEVSEG_CHAR_H,
+				ENUM_SEVSEG_CHAR_E,
+				ENUM_SEVSEG_CHAR_L,
+				ENUM_SEVSEG_CHAR_L,
+				ENUM_SEVSEG_CHAR_0,
+				ENUM_SEVSEG_CHAR_Blank,
+				ENUM_SEVSEG_CHAR_A,
+				ENUM_SEVSEG_CHAR_n,
+				ENUM_SEVSEG_CHAR_D,
+				ENUM_SEVSEG_CHAR_E,
+				ENUM_SEVSEG_CHAR_r,
+				ENUM_SEVSEG_CHAR_5,
+				ENUM_SEVSEG_CHAR_o,
+				ENUM_SEVSEG_CHAR_n,
+				ENUM_SEVSEG_CHAR_Blank,
+				ENUM_SEVSEG_CHAR_Blank,
 
-	uint8_t myDataa[5] = {ENUM_SEVSEG_CHAR_t,
-					  	  ENUM_SEVSEG_CHAR_r,
-						  ENUM_SEVSEG_CHAR_o,
-						  ENUM_SEVSEG_CHAR_Y,};
-						  //ENUM_SEVSEG_CHAR_o};
+		};
 
-/*	uint8_t myDataa[5] = {ENUM_SEVSEG_CHAR_8,
-						  ENUM_SEVSEG_CHAR_r,
-						  ENUM_SEVSEG_CHAR_U,
-						  ENUM_SEVSEG_CHAR_h};
-*/
+	SEVSEG_Init(myDataa);
 
-	SEVSEG_StoreDataBuf(&sevseg, myDataa);
+	SEVSEG_StoreDataWindow(&sevseg, myDataa); // will store the first 4 of data buffer myDataa
+											  // after, only called with sevesg.data_window as 2nd arg
 
 	volatile enum ENUM_SEVSEG_CHAR test1;
 
 /* |||||||||||||||||||||  LOOP  ||||||||||||||||||||||||| */
 
 	while(1) {
+
+		/* Task 0: Forced State Reconcilation */
+		if (sevseg.state == SEVSEG_STATE_SCROLLING){ // set to scrolling at sevseg_init() simple solutions:
+													 //	implement user controlled play button
+													 // cursor button puts into edit mode, must go through all
+													 // digit options to return to play mode !!
+
+			TIM3->CR1 |= TIM_CR1_CEN; // 	constantly setting this bit
+		}
 
 		/* Task 1: Polling and Processing */
 		/*
@@ -96,7 +117,25 @@ SEVSEG_Init();
 		}
 
 
-		*/
+*/
+
+		//scroll every 500 ms
+
+		if (TIM3_UP) {
+			sevseg.data_window[0] = sevseg.data_window[sevseg.scroll_head];
+
+			for (int i = 1; i < SEVSEG_QTY_DIGITS; i++){
+				int next = sevseg.scroll_head + i;
+				next = SEVSEG_DATA_BUF_SIZE % next;
+				sevseg.data_window[i] = sevseg.data_buf[next];
+			}
+
+			int next = sevseg.scroll_head + 1;
+			if (next > SEVSEG_DATA_BUF_SIZE - 1) next = 0;
+			sevseg.scroll_head = next;
+
+		} // end TIM3_Up
+
 		/* Task 2: Render Display */
 
 		test1 = SEVSEG_ReadDigitData(&sevseg, sevseg.refresh_target);
@@ -108,10 +147,10 @@ SEVSEG_Init();
 						  DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].pin, GPIO_PIN_SET);
 		HAL_Delay(2);
 
+		// consider sandwiching processing task during this delay(2) for optmization
+
 		HAL_GPIO_WritePin(DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].port,
 						  DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].pin, GPIO_PIN_RESET);
-
-
 
 		if (sevseg.refresh_target == SEVSEG_QTY_DIGITS - 1) {
 			sevseg.refresh_target = ENUM_SEVSEG_DIGIT_0;
@@ -126,7 +165,13 @@ SEVSEG_Init();
 
 /* |||||||||||||||||||||  DEFINITIONS  ||||||||||||||||||||||||| */
 
-static void SEVSEG_Init(){
+static void SEVSEG_Init(uint8_t data_buf[]){
+
+	for (int i = 0; i<SEVSEG_DATA_BUF_SIZE; i++) {
+		sevseg.data_buf[i] = data_buf[i];
+	}
+
+	sevseg.state = SEVSEG_STATE_SCROLLING;
 
 	// contiguous array of GPIO pins, used for multiplexing displays
 
@@ -170,8 +215,10 @@ static void SEVSEG_Init(){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
 	 if (htim->Instance == TIM2){
-		 TIM2_UP = true; // invoke
+		 TIM2_UP = true; // invoke re-enable user input
 		 TIM2->CR1 =~(TIM_CR1_CEN); // disable timer
+	} else if (htim->Instance == TIM3){
+		 TIM3_UP = true; // invoke scroll tick
 	}
 }
 

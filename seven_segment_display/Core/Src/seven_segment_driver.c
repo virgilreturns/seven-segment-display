@@ -153,7 +153,7 @@ const uint16_t INDEX_FROM_ENUM[0x102] = {
  };
 
 //stores look-up indexes (user-defined-pointers) into each DIGIT in sevseg.digits_select[DIGIT]
-void SEVSEG_StoreDataBuf(SEVSEG_DISPLAY_TypeDef* sevseg, enum ENUM_SEVSEG_CHAR data[]) {
+void SEVSEG_StoreDataWindow(SEVSEG_DISPLAY_TypeDef* sevseg, enum ENUM_SEVSEG_CHAR data[]) {
 	for (int i = 0; i < SEVSEG_QTY_DIGITS; i++) {
 		sevseg->digit_select[i].current_char_index = INDEX_FROM_ENUM[data[i]];
 	}

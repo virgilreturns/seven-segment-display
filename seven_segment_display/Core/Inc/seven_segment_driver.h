@@ -3,6 +3,7 @@
 
 
 #define SEVSEG_QTY_DIGITS 4
+#define SEVSEG_DATA_BUF_SIZE 16
 
 #include "stm32f4xx_hal.h"
 
@@ -11,6 +12,11 @@ typedef enum __DEBOUNCE_STATE {
 	DEBOUNCE_FALSE = 0,
 	DEBOUNCE_TRUE = 1
 } DEBOUNCE_STATE;
+
+typedef enum {
+	SEVSEG_STATE_SCROLLING = 0, // for scrolling text, need defined data buffer length
+	SEVSEG_STATE_STATIC = 1,
+} SEVSEG_STATE;
 
 enum ENUM_SEVSEG_CHAR {
 	ENUM_SEVSEG_CHAR_0 = 0x40,
@@ -56,21 +62,27 @@ enum ENUM_SEVSEG_DIGIT { //digit index
 
 
 typedef struct {
-	uint16_t DS_pin;
-	GPIO_TypeDef* DS_port;
-	uint8_t current_char_index;
+	GPIO_TypeDef* 	DS_port;
+	uint16_t 		DS_pin;
+	uint8_t 		current_char_index;
+	uint8_t 		state;
 } SEVSEG_DIGIT_TypeDef;
 
 typedef struct {
-	SPI_HandleTypeDef* spi_handler;
-	SEVSEG_DIGIT_TypeDef digit_select[SEVSEG_QTY_DIGITS]; // for cursor
-	enum ENUM_SEVSEG_DIGIT refresh_target; // for rendering
+	SPI_HandleTypeDef* 		spi_handler;
+	SEVSEG_DIGIT_TypeDef 	digit_select[SEVSEG_QTY_DIGITS]; // for cursor
+	enum ENUM_SEVSEG_CHAR 	data_buf[SEVSEG_DATA_BUF_SIZE];
+	enum ENUM_SEVSEG_CHAR 	data_window[SEVSEG_QTY_DIGITS];
+	uint8_t 				scroll_head;
+	enum ENUM_SEVSEG_DIGIT 	refresh_target; // for rendering
+	SEVSEG_STATE			state;
+
 } SEVSEG_DISPLAY_TypeDef;
 
 extern enum ENUM_SEVSEG_CHAR SEVSEG_CHAR_ARRAY[];
 extern const uint16_t INDEX_FROM_ENUM[];
 
-void SEVSEG_StoreDataBuf(SEVSEG_DISPLAY_TypeDef* seveg, enum ENUM_SEVSEG_CHAR data[]);
+void SEVSEG_StoreDataWindow(SEVSEG_DISPLAY_TypeDef* seveg, enum ENUM_SEVSEG_CHAR data[]);
 enum ENUM_SEVSEG_CHAR SEVSEG_ReadDigitData(SEVSEG_DISPLAY_TypeDef*, enum ENUM_SEVSEG_DIGIT);
 HAL_StatusTypeDef SEVSEG_DigitTx(SEVSEG_DISPLAY_TypeDef* sevseg);
 HAL_StatusTypeDef SEVSEG_Write(SEVSEG_DISPLAY_TypeDef* sevseg);
