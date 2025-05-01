@@ -101,6 +101,9 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   app_main();
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -375,8 +378,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : UI_COUNTDOWN_Pin UI_COUNTUP_Pin UI_CURSOR_Pin */
   GPIO_InitStruct.Pin = UI_COUNTDOWN_Pin|UI_COUNTUP_Pin|UI_CURSOR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -422,6 +425,15 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -431,6 +443,9 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
+
 
 /* USER CODE END 4 */
 

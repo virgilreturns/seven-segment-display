@@ -26,20 +26,18 @@ extern TIM_HandleTypeDef htim3;
 
 SEVSEG_DISPLAY_TypeDef sevseg;
 
-volatile static bool UI_CURSOR_PRESSED = false;
-volatile static bool UI_COUNTUP_PRESSED = false;
-volatile static bool UI_COUNTDOWN_PRESSED = false;
-volatile static bool TIM2_UP = false;
-volatile static bool TIM3_UP = false;
+volatile int UI_CURSOR_PRESSED = 0;
+volatile int UI_COUNTUP_PRESSED = 0;
+volatile int UI_COUNTDOWN_PRESSED = 0;
+volatile int TIM2_UP = 0;
+volatile int TIM3_UP = 0;
 volatile static uint8_t temp;
-static const uint16_t UI_ALL_BITS = 0x111;
+
 
 volatile enum ENUM_SEVSEG_DIGIT cursor_selection = ENUM_SEVSEG_DIGIT_0;
 GPIO_PIN_TypeDef DIGIT_SEL_PINS_ARRAY[8];
 
 static void SEVSEG_Init();
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef*);
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef*);
 
 
 /* |||||||||||||||||||||  MAIN  ||||||||||||||||||||||||| */
@@ -47,7 +45,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef*);
 int app_main(){
 
 	// this is used in sevseg_init
-	uint8_t myDataa[SEVSEG_DATA_BUF_SIZE] = {
+	uint8_t myDataa2[SEVSEG_DATA_BUF_SIZE] = {
 				ENUM_SEVSEG_CHAR_H,
 				ENUM_SEVSEG_CHAR_E,
 				ENUM_SEVSEG_CHAR_L,
@@ -66,6 +64,13 @@ int app_main(){
 				ENUM_SEVSEG_CHAR_Blank,
 
 		};
+
+	uint8_t myDataa[4] = {
+			ENUM_SEVSEG_CHAR_A,
+			ENUM_SEVSEG_CHAR_n,
+			ENUM_SEVSEG_CHAR_D,
+			ENUM_SEVSEG_CHAR_Y,
+	};
 
 	SEVSEG_Init(myDataa);
 
@@ -145,7 +150,7 @@ int app_main(){
 
 		HAL_GPIO_WritePin(DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].port,
 						  DIGIT_SEL_PINS_ARRAY[sevseg.refresh_target].pin, GPIO_PIN_SET);
-		HAL_Delay(2);
+		HAL_Delay(1);
 
 		// consider sandwiching processing task during this delay(2) for optmization
 
@@ -213,28 +218,28 @@ static void SEVSEG_Init(uint8_t data_buf[]){
 
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
-	 if (htim->Instance == TIM2){
-		 TIM2_UP = true; // invoke re-enable user input
-		 TIM2->CR1 =~(TIM_CR1_CEN); // disable timer
-	} else if (htim->Instance == TIM3){
-		 TIM3_UP = true; // invoke scroll tick
-	}
-}
+static const uint16_t UI_ALL_BITS = 0x111;
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin){
-	if (pin == 0) {
-		UI_CURSOR_PRESSED = true; //invoke
+	if (pin == UI_CURSOR_Pin) {
+		UI_CURSOR_PRESSED = 1; //invoke
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 		EXTI->EMR =~ UI_ALL_BITS; // disable exti lines 0:2
-	} else if (pin == 1) {
-		UI_COUNTDOWN_PRESSED = true;
+	} else if (pin == UI_COUNTDOWN_Pin) {
+		UI_COUNTDOWN_PRESSED = 1;
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 		EXTI->EMR =~ UI_ALL_BITS;
-	} else if (pin == 2 ) {
-		UI_COUNTUP_PRESSED = true;
+	} else if (pin == UI_COUNTUP_Pin) {
+		UI_COUNTUP_PRESSED = 1;
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 		EXTI->EMR =~ UI_ALL_BITS;
+	}
+	else {
+		__NOP();
 	}
 }
 
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef* hspi){
-}
+
+
+
 

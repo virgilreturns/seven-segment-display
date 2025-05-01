@@ -62,11 +62,14 @@ void Error_Handler(void);
 #define B1_GPIO_Port GPIOC
 #define B1_EXTI_IRQn EXTI15_10_IRQn
 #define UI_COUNTDOWN_Pin GPIO_PIN_0
-#define UI_COUNTDOWN_GPIO_Port GPIOC
+#define UI_COUNTDOWN_GPIO_Port GPIOA
+#define UI_COUNTDOWN_EXTI_IRQn EXTI0_IRQn
 #define UI_COUNTUP_Pin GPIO_PIN_1
-#define UI_COUNTUP_GPIO_Port GPIOC
+#define UI_COUNTUP_GPIO_Port GPIOA
+#define UI_COUNTUP_EXTI_IRQn EXTI1_IRQn
 #define UI_CURSOR_Pin GPIO_PIN_2
-#define UI_CURSOR_GPIO_Port GPIOC
+#define UI_CURSOR_GPIO_Port GPIOA
+#define UI_CURSOR_EXTI_IRQn EXTI2_IRQn
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
 #define SPI_RESET_Pin GPIO_PIN_14
@@ -91,6 +94,9 @@ void Error_Handler(void);
 #define DIGIT_SEL_4_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+
+// SPI MOSI B15
+// SPI CLK B10
 
 /* USER CODE END Private defines */
 
