@@ -20,8 +20,6 @@ typedef struct {
 }GPIO_PIN_TypeDef;
 
 extern SPI_HandleTypeDef hspi2;
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 
 SEVSEG_DISPLAY_TypeDef sevseg;
@@ -79,6 +77,8 @@ int app_main(){
 
 	volatile enum ENUM_SEVSEG_CHAR test1;
 
+	HAL_TIM_Base_Start_IT(&htim3);
+
 /* |||||||||||||||||||||  LOOP  ||||||||||||||||||||||||| */
 
 	while(1) {
@@ -127,6 +127,8 @@ int app_main(){
 		//scroll every 500 ms
 
 		if (TIM3_UP) {
+
+			TIM3_UP = false;
 			sevseg.data_window[0] = sevseg.data_window[sevseg.scroll_head];
 
 			for (int i = 1; i < SEVSEG_QTY_DIGITS; i++){
@@ -138,6 +140,7 @@ int app_main(){
 			int next = sevseg.scroll_head + 1;
 			if (next > SEVSEG_DATA_BUF_SIZE - 1) next = 0;
 			sevseg.scroll_head = next;
+
 
 		} // end TIM3_Up
 
@@ -239,7 +242,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin){
 	}
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
+{
+  if (htim -> Instance == TIM3){
+	  //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	  TIM3_UP = true;
+  }
 
+}
 
 
 
