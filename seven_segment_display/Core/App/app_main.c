@@ -71,7 +71,7 @@ int app_main(){
 	};
 
 	SEVSEG_Init(myDataa);
-	SEVSEG_StoreDataWindow(&sevseg, myDataa); // will store the first 4 of data buffer myDataa
+	SEVSEG_StoreDataWindow(&sevseg, myDataa2); // will store the first 4 of data buffer myDataa
 											  // after, only called with sevesg.data_window as 2nd arg
 
 	// HAL_TIM_Base_Start_IT(&htim3);
@@ -95,11 +95,14 @@ int app_main(){
 
 
 		if (UI_CURSOR_PRESSED) {
-			UI_CURSOR_PRESSED = false;
+			UI_CURSOR_PRESSED = false; //acknowledge
 
 			if (sevseg.state == SEVSEG_STATE_EDITING){ // if already in edit mode, increment digit selection
-				if (cursor_selection == ( SEVSEG_QTY_DIGITS - 1))
-					sevseg.state = SEVSEG_STATE_SCROLLING;
+
+				if (cursor_selection == ( SEVSEG_QTY_DIGITS - 1)){ // return to scroll state if pressed on the last digit
+					sevseg.state = SEVSEG_STATE_SCROLLING; }
+
+				else {cursor_selection++;} // increment cursor
 
 				TIM2->CR1 |= TIM_CR1_CEN; // enable debounce timer
 				}
@@ -113,6 +116,7 @@ int app_main(){
 
 		if (UI_COUNTUP_PRESSED){
 			UI_COUNTUP_PRESSED = false;
+
 			temp = sevseg.digit_select[cursor_selection].current_char_index;
 			if (temp == ENUM_SEVSEG_CHAR_Blank) temp = ENUM_SEVSEG_CHAR_0;
 			else temp++;
@@ -135,23 +139,12 @@ int app_main(){
 
 		//scroll every 500 ms
 
-		/* if (TIM3_UP) {
+		 if (TIM3_UP) {
+			TIM3_UP = false; // acknowledge, timer will stay on regardless of state
 
-			TIM3_UP = false;
-			sevseg.data_window[0] = sevseg.data_window[sevseg.scroll_head];
-
-			for (int i = 1; i < SEVSEG_QTY_DIGITS; i++){
-				int next = sevseg.scroll_head + i;
-				next = SEVSEG_DATA_BUF_SIZE % next;
-				sevseg.data_window[i] = sevseg.data_buf[next];
-			}
-
-			int next = sevseg.scroll_head + 1;
-			if (next > SEVSEG_DATA_BUF_SIZE - 1) next = 0;
-			sevseg.scroll_head = next;
-
-
-		} // end TIM3_Up */
+			if(sevseg.state == SEVSEG_STATE_SCROLLING) { // only scroll if in proper state
+				SEVSEG_ScrollDataWindow(&sevseg);} // seven_segment_driver.c
+		 }
 
 		/* Task 2: Render Display */
 
@@ -253,7 +246,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
-  if (htim -> Instance == TIM3){
+  if (htim -> Instance == TIM3){ // scrolling update timer
 	  //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  TIM3_UP = true;
   }

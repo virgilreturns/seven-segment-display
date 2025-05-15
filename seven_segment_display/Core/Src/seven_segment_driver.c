@@ -172,9 +172,18 @@ HAL_StatusTypeDef SEVSEG_DigitTx(SEVSEG_DISPLAY_TypeDef* sevseg) {
 	return success;
 };
 
-//FIRST DEMO IMPLREMENTATION: NO 'PLAY' MODE, JUST WRITE 5 CHAR TO 5 DIGIT DISPLAY
+void SEVSEG_ScrollDataWindow(SEVSEG_DISPLAY_TypeDef* sevseg){
 
-// Array of all ENUM_SEVSEG_CHAR values
+	for (int i = 0; i < SEVSEG_QTY_DIGITS-1; i++){
+		sevseg->data_window[i] = sevseg->data_buf[(sevseg->scroll_head + i) % SEVSEG_DATA_BUF_SIZE];
+	}
+
+	if (sevseg->scroll_head == SEVSEG_DATA_BUF_SIZE - 1) { // at the end of the data buffer
+		sevseg->scroll_head = 0;
+	} else;
+	sevseg->scroll_head++;
+
+}
 
 
 

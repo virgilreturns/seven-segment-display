@@ -86,6 +86,8 @@ void SEVSEG_StoreDataWindow(SEVSEG_DISPLAY_TypeDef* seveg, enum ENUM_SEVSEG_CHAR
 enum ENUM_SEVSEG_CHAR SEVSEG_ReadDigitData(SEVSEG_DISPLAY_TypeDef*, enum ENUM_SEVSEG_DIGIT);
 HAL_StatusTypeDef SEVSEG_DigitTx(SEVSEG_DISPLAY_TypeDef* sevseg);
 HAL_StatusTypeDef SEVSEG_Write(SEVSEG_DISPLAY_TypeDef* sevseg);
+void SEVSEG_ScrollDataWindow(SEVSEG_DISPLAY_TypeDef* sevseg);
+
 void SEVSEG_Cycle();
 
 #endif
