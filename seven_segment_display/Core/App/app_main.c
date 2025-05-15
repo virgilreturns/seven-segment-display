@@ -71,20 +71,17 @@ int app_main(){
 	};
 
 	SEVSEG_Init(myDataa);
-
 	SEVSEG_StoreDataWindow(&sevseg, myDataa); // will store the first 4 of data buffer myDataa
 											  // after, only called with sevesg.data_window as 2nd arg
 
-	volatile enum ENUM_SEVSEG_CHAR test1;
-
-	HAL_TIM_Base_Start_IT(&htim3);
+	// HAL_TIM_Base_Start_IT(&htim3);
 
 /* |||||||||||||||||||||  LOOP  ||||||||||||||||||||||||| */
 
 	while(1) {
 
 		/* Task 0: Forced State Reconcilation */
-		if (sevseg.state == SEVSEG_STATE_SCROLLING){ // set to scrolling at sevseg_init() simple solutions:
+		/* if (sevseg.state == SEVSEG_STATE_SCROLLING){ // set to scrolling at sevseg_init() simple solutions:
 													 //	implement user controlled play button
 													 // cursor button puts into edit mode, must go through all
 													 // digit options to return to play mode !!
@@ -92,41 +89,53 @@ int app_main(){
 			TIM3->CR1 |= TIM_CR1_CEN; // 	constantly setting this bit
 		}
 
+		*/
+
 		/* Task 1: Polling and Processing */
-		/*
+
 
 		if (UI_CURSOR_PRESSED) {
 			UI_CURSOR_PRESSED = false;
-			if (cursor_selection == ( SEVSEG_QTY_DIGITS - 1))
-				cursor_selection = 0; else cursor_selection++;
 
-		} else if (UI_COUNTUP_PRESSED){
+			if (sevseg.state == SEVSEG_STATE_EDITING){ // if already in edit mode, increment digit selection
+				if (cursor_selection == ( SEVSEG_QTY_DIGITS - 1))
+					sevseg.state = SEVSEG_STATE_SCROLLING;
+
+				TIM2->CR1 |= TIM_CR1_CEN; // enable debounce timer
+				}
+
+			else { // entering edit state
+				sevseg.state = SEVSEG_STATE_EDITING;
+				cursor_selection = 0;
+			}
+
+		}
+
+		if (UI_COUNTUP_PRESSED){
 			UI_COUNTUP_PRESSED = false;
 			temp = sevseg.digit_select[cursor_selection].current_char_index;
 			if (temp == ENUM_SEVSEG_CHAR_Blank) temp = ENUM_SEVSEG_CHAR_0;
 			else temp++;
 			sevseg.digit_select[cursor_selection].current_char_index = temp;
 
-		} else if (UI_COUNTDOWN_PRESSED){
+			TIM2->CR1 |= TIM_CR1_CEN; // enable debounce timer
+
+		}
+
+		if (UI_COUNTDOWN_PRESSED)	{
 			UI_COUNTUP_PRESSED = false;
 			temp = sevseg.digit_select[cursor_selection].current_char_index;
 			if (temp == ENUM_SEVSEG_CHAR_0) temp = ENUM_SEVSEG_CHAR_Blank;
 			else temp--;
 			sevseg.digit_select[cursor_selection].current_char_index = temp;
 
+			TIM2->CR1 |= TIM_CR1_CEN;// enable debounce timer
 		}
 
-		if (TIM2_UP) {
-			TIM2_UP = false; // acknowledge
-			EXTI->EMR |= UI_ALL_BITS; // re-enable interrupts
-		}
-
-
-*/
 
 		//scroll every 500 ms
 
-		if (TIM3_UP) {
+		/* if (TIM3_UP) {
 
 			TIM3_UP = false;
 			sevseg.data_window[0] = sevseg.data_window[sevseg.scroll_head];
@@ -142,11 +151,10 @@ int app_main(){
 			sevseg.scroll_head = next;
 
 
-		} // end TIM3_Up
+		} // end TIM3_Up */
 
 		/* Task 2: Render Display */
 
-		test1 = SEVSEG_ReadDigitData(&sevseg, sevseg.refresh_target);
 		HAL_SPI_Transmit(&hspi2, &SEVSEG_CHAR_ARRAY[sevseg.digit_select[sevseg.refresh_target].current_char_index] , 1, 100);
 		HAL_GPIO_WritePin(SPI_LATCH_GPIO_Port, SPI_LATCH_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(SPI_LATCH_GPIO_Port, SPI_LATCH_Pin, GPIO_PIN_RESET);
@@ -221,26 +229,27 @@ static void SEVSEG_Init(uint8_t data_buf[]){
 
 }
 
-static const uint16_t UI_ALL_BITS = 0x111;
+static const uint16_t UI_ALL_BITS = 7; // 0b0111
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin){
 	if (pin == UI_CURSOR_Pin) {
 		UI_CURSOR_PRESSED = 1; //invoke
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		EXTI->EMR =~ UI_ALL_BITS; // disable exti lines 0:2
+		EXTI->EMR &=~ UI_ALL_BITS; // disable exti lines 0:2
 	} else if (pin == UI_COUNTDOWN_Pin) {
 		UI_COUNTDOWN_PRESSED = 1;
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		EXTI->EMR =~ UI_ALL_BITS;
+		EXTI->EMR &=~ UI_ALL_BITS;
 	} else if (pin == UI_COUNTUP_Pin) {
 		UI_COUNTUP_PRESSED = 1;
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		EXTI->EMR =~ UI_ALL_BITS;
+		EXTI->EMR &=~ UI_ALL_BITS;
 	}
 	else {
 		__NOP();
 	}
 }
+
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
@@ -248,7 +257,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 	  //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  TIM3_UP = true;
   }
-
+  if (htim -> Instance == TIM2){ //debounce timer 10 kHz -> 50 ms UP One-Pulse-Mode
+	  EXTI->EMR |= UI_ALL_BITS;
+  }
 }
 
 

@@ -15,7 +15,7 @@ typedef enum __DEBOUNCE_STATE {
 
 typedef enum {
 	SEVSEG_STATE_SCROLLING = 0, // for scrolling text, need defined data buffer length
-	SEVSEG_STATE_STATIC = 1,
+	SEVSEG_STATE_EDITING = 1,
 } SEVSEG_STATE;
 
 enum ENUM_SEVSEG_CHAR {
