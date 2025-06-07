@@ -64,14 +64,14 @@ int app_main(){
 		};
 
 	uint8_t myDataa[4] = {
-			ENUM_SEVSEG_CHAR_A,
-			ENUM_SEVSEG_CHAR_n,
-			ENUM_SEVSEG_CHAR_D,
-			ENUM_SEVSEG_CHAR_Y,
+			ENUM_SEVSEG_CHAR_1,
+			ENUM_SEVSEG_CHAR_2,
+			ENUM_SEVSEG_CHAR_3,
+			ENUM_SEVSEG_CHAR_4,
 	};
 
 	SEVSEG_Init(myDataa);
-	SEVSEG_StoreDataWindow(&sevseg, myDataa2); // will store the first 4 of data buffer myDataa
+	SEVSEG_StoreDataWindow(&sevseg, myDataa); // will store the first 4 of data buffer myDataa
 											  // after, only called with sevesg.data_window as 2nd arg
 
 	// HAL_TIM_Base_Start_IT(&htim3);
@@ -94,7 +94,7 @@ int app_main(){
 		/* Task 1: Polling and Processing */
 
 
-		if (UI_CURSOR_PRESSED) {
+		/* if (UI_CURSOR_PRESSED) {
 			UI_CURSOR_PRESSED = false; //acknowledge
 
 			if (sevseg.state == SEVSEG_STATE_EDITING){ // if already in edit mode, increment digit selection
@@ -145,6 +145,8 @@ int app_main(){
 			if(sevseg.state == SEVSEG_STATE_SCROLLING) { // only scroll if in proper state
 				SEVSEG_ScrollDataWindow(&sevseg);} // seven_segment_driver.c
 		 }
+
+		*/
 
 		/* Task 2: Render Display */
 
