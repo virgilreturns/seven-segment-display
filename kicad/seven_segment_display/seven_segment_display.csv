@@ -1,0 +1,4 @@
+"Reference","Qty","Value","DNP","Exclude from BOM","Exclude from Board","Footprint","Datasheet"
+"DS1","1","LTC-55623G","","","","Library:LTC_5623G-SDIP",""
+"R1,R2,R3,R4,R5,R6,R7,R8","8","660","","","","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~"
+"U1","1","74AHC595","","","","Package_DIP:DIP-16_W10.16mm","https://assets.nexperia.com/documents/data-sheet/74AHC_AHCT595.pdf"
