@@ -1863,6 +1863,16 @@
 		)
 		(uuid "1f9369b4-c90e-4bc3-9eb7-b0adb018ba12")
 	)
+	(label "SER"
+		(at 76.2 77.47 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "2fa097ad-f720-428d-a2f4-97179f6560bd")
+	)
 	(label "QH'"
 		(at 76.2 82.55 0)
 		(effects
@@ -1884,24 +1894,14 @@
 		(uuid "51c35e93-ee8a-41cb-84f7-0d658db94fbc")
 	)
 	(label "~OE"
-		(at 76.2 72.39 0)
+		(at 76.2 74.93 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "597547ea-a9e1-4742-80e6-9b259c724489")
-	)
-	(label "SER"
-		(at 76.2 69.85 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "5ae8c88e-5893-44e9-8ec3-aa9c1ecd37e8")
+		(uuid "5272ad71-7f8f-478f-be62-ad5022381390")
 	)
 	(label "DIG4"
 		(at 220.98 97.79 0)
@@ -1953,6 +1953,16 @@
 		)
 		(uuid "94f357e8-1917-4440-9714-9e7e07364613")
 	)
+	(label "CLK"
+		(at 76.2 69.85 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9b06266e-c2bf-414b-91a0-1e69e77e9951")
+	)
 	(label "DIG3"
 		(at 220.98 95.25 0)
 		(effects
@@ -1974,14 +1984,14 @@
 		(uuid "aa37ed52-763b-44d8-b1f5-a495b70cef7c")
 	)
 	(label "LATCH"
-		(at 76.2 74.93 0)
+		(at 76.2 72.39 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "ad1f1034-8928-45c7-b4ac-468dd87da516")
+		(uuid "ac7088e6-e5f4-441c-891e-066f591fd59e")
 	)
 	(label "SER"
 		(at 109.22 87.63 180)
@@ -2012,16 +2022,6 @@
 			(justify left bottom)
 		)
 		(uuid "cd16ceb2-0bdf-4486-b461-8df6e57383c9")
-	)
-	(label "CLK"
-		(at 76.2 77.47 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "e732af95-0d99-40f8-a1b7-e048fa142470")
 	)
 	(symbol
 		(lib_id "Display2:LTC-5623G")
