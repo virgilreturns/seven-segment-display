@@ -28,8 +28,9 @@ volatile int UI_CURSOR_PRESSED = 0;
 volatile int UI_COUNTUP_PRESSED = 0;
 volatile int UI_COUNTDOWN_PRESSED = 0;
 volatile int TIM2_UP = 0;
-volatile int TIM3_UP = 0;
-volatile static uint8_t temp;
+volatile int TIM3_UP = false;
+volatile int TIM3_CYCLE = 0;
+volatile int temp_state = 0;
 
 
 volatile enum ENUM_SEVSEG_DIGIT cursor_selection = ENUM_SEVSEG_DIGIT_0;
@@ -43,38 +44,27 @@ static void SEVSEG_Init();
 int app_main(){
 
 	// this is used in sevseg_init
-	uint8_t myDataa2[SEVSEG_DATA_BUF_SIZE] = {
-				ENUM_SEVSEG_CHAR_H,
-				ENUM_SEVSEG_CHAR_E,
-				ENUM_SEVSEG_CHAR_L,
-				ENUM_SEVSEG_CHAR_L,
-				ENUM_SEVSEG_CHAR_0,
-				ENUM_SEVSEG_CHAR_Blank,
-				ENUM_SEVSEG_CHAR_A,
-				ENUM_SEVSEG_CHAR_n,
-				ENUM_SEVSEG_CHAR_D,
-				ENUM_SEVSEG_CHAR_E,
+
+	uint8_t myDataa[4] = {
+			ENUM_SEVSEG_CHAR_A,
+			ENUM_SEVSEG_CHAR_n,
+			ENUM_SEVSEG_CHAR_d,
+			ENUM_SEVSEG_CHAR_E,
+	};
+
+	uint8_t myDataa2[4] = {
 				ENUM_SEVSEG_CHAR_r,
 				ENUM_SEVSEG_CHAR_5,
 				ENUM_SEVSEG_CHAR_o,
 				ENUM_SEVSEG_CHAR_n,
-				ENUM_SEVSEG_CHAR_Blank,
-				ENUM_SEVSEG_CHAR_Blank,
-
 		};
 
-	uint8_t myDataa[4] = {
-			ENUM_SEVSEG_CHAR_1,
-			ENUM_SEVSEG_CHAR_2,
-			ENUM_SEVSEG_CHAR_3,
-			ENUM_SEVSEG_CHAR_4,
-	};
 
 	SEVSEG_Init(myDataa);
 	SEVSEG_StoreDataWindow(&sevseg, myDataa); // will store the first 4 of data buffer myDataa
 											  // after, only called with sevesg.data_window as 2nd arg
 
-	// HAL_TIM_Base_Start_IT(&htim3);
+	HAL_TIM_Base_Start_IT(&htim3);
 
 /* |||||||||||||||||||||  LOOP  ||||||||||||||||||||||||| */
 
@@ -136,17 +126,21 @@ int app_main(){
 			TIM2->CR1 |= TIM_CR1_CEN;// enable debounce timer
 		}
 
+		*/
 
-		//scroll every 500 ms
+		/* Task 1.5: Alternating Text */
 
 		 if (TIM3_UP) {
-			TIM3_UP = false; // acknowledge, timer will stay on regardless of state
+			TIM3_UP = false; // acknowledge
 
-			if(sevseg.state == SEVSEG_STATE_SCROLLING) { // only scroll if in proper state
-				SEVSEG_ScrollDataWindow(&sevseg);} // seven_segment_driver.c
+			if (temp_state == 0){
+			SEVSEG_StoreDataWindow(&sevseg, myDataa2);
+			temp_state = 1;
+		 } else {
+			 SEVSEG_StoreDataWindow(&sevseg, myDataa);
+			 temp_state = 0;
 		 }
-
-		*/
+		 } // end TIM3_UP
 
 		/* Task 2: Render Display */
 
@@ -173,6 +167,7 @@ int app_main(){
 	} //end while
 
 } //end app_main
+
 
 /* |||||||||||||||||||||  DEFINITIONS  ||||||||||||||||||||||||| */
 
@@ -249,8 +244,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin){
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
   if (htim -> Instance == TIM3){ // scrolling update timer
-	  //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  TIM3_UP = true;
+	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	  TIM3_CYCLE++;
+
+	  if (TIM3_CYCLE > 10) {
+		  TIM3_CYCLE = 0;
+		  TIM3_UP = true;
+	  }
+
   }
   if (htim -> Instance == TIM2){ //debounce timer 10 kHz -> 50 ms UP One-Pulse-Mode
 	  EXTI->EMR |= UI_ALL_BITS;
